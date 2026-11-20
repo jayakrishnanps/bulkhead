@@ -1,0 +1,19 @@
+{
+  "name": "bulkhead",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "check:style": "node scripts/check-style.mjs",
+    "check": "pnpm typecheck && pnpm test && pnpm check:style"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^5.9.3"
+  }
+}
