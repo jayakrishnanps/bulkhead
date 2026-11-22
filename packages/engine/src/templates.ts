@@ -4,44 +4,59 @@ const PLACEHOLDER_RE = /\{\{r(\d+)((?:\|[^}|]*)*)\}\}/g;
 
 type Transform = (text: string, ...args: string[]) => string;
 
-const TRANSFORMS: Record<string, Transform> = {
-  base64: (text) => {
-    const bytes = new TextEncoder().encode(text);
-    let binary = "";
-    for (const byte of bytes) {
-      binary += String.fromCharCode(byte);
-    }
-    return btoa(binary);
-  },
-  base64url: (text) => {
-    const bytes = new TextEncoder().encode(text);
-    let binary = "";
-    for (const byte of bytes) {
-      binary += String.fromCharCode(byte);
-    }
-    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  },
-  hex: (text) => {
-    const bytes = new TextEncoder().encode(text);
-    let result = "";
-    for (const byte of bytes) {
-      result += byte.toString(16).padStart(2, "0");
-    }
-    return result;
-  },
-  urlenc: (text) => encodeURIComponent(text),
-  slice: (text, startStr, lengthStr) => {
-    const start = parseInt(startStr, 10);
-    const length = parseInt(lengthStr, 10);
-    return text.slice(start, start + length);
-  },
-  upper: (text) => text.toUpperCase(),
-};
+const TRANSFORMS = new Map<string, Transform>([
+  [
+    "base64",
+    (text) => {
+      const bytes = new TextEncoder().encode(text);
+      let binary = "";
+      for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+      }
+      return btoa(binary);
+    },
+  ],
+  [
+    "base64url",
+    (text) => {
+      const bytes = new TextEncoder().encode(text);
+      let binary = "";
+      for (const byte of bytes) {
+        binary += String.fromCharCode(byte);
+      }
+      return btoa(binary)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+    },
+  ],
+  [
+    "hex",
+    (text) => {
+      const bytes = new TextEncoder().encode(text);
+      let result = "";
+      for (const byte of bytes) {
+        result += byte.toString(16).padStart(2, "0");
+      }
+      return result;
+    },
+  ],
+  ["urlenc", (text) => encodeURIComponent(text)],
+  [
+    "slice",
+    (text, startStr, lengthStr) => {
+      const start = parseInt(startStr, 10);
+      const length = parseInt(lengthStr, 10);
+      return text.slice(start, start + length);
+    },
+  ],
+  ["upper", (text) => text.toUpperCase()],
+]);
 
 function applyTransform(text: string, part: string): string {
   const colonIndex = part.indexOf(":");
   if (colonIndex === -1) {
-    const fn = TRANSFORMS[part];
+    const fn = TRANSFORMS.get(part);
     if (fn === undefined) {
       return text;
     }
@@ -50,7 +65,7 @@ function applyTransform(text: string, part: string): string {
   const name = part.slice(0, colonIndex);
   const rest = part.slice(colonIndex + 1);
   const args = rest.split(":");
-  const fn = TRANSFORMS[name];
+  const fn = TRANSFORMS.get(name);
   if (fn === undefined) {
     return text;
   }

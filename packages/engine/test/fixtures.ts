@@ -1,4 +1,5 @@
 import { createEffects } from "../src/effects";
+import type { MatchContext } from "../src/types";
 import { createVfs } from "../src/vfs";
 import type { VirtualState } from "../src/virtual-tools";
 import type { WorldSpec } from "../src/world-types";
@@ -40,5 +41,18 @@ export function makeState(overrides?: Partial<WorldSpec>): VirtualState {
     spec,
     vfs: createVfs(spec, ROOT),
     effects: createEffects(),
+  };
+}
+
+export function makeContext(
+  overrides?: Partial<MatchContext>,
+): MatchContext {
+  const vfs = createVfs(makeSpec(), ROOT);
+  return {
+    home: ROOT,
+    caseInsensitive: false,
+    resolvePath: (path: string) => vfs.resolve(path),
+    carriedLabels: () => [],
+    ...overrides,
   };
 }

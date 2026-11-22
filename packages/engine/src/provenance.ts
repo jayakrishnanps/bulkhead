@@ -1,5 +1,7 @@
 import { LABELS, MIN_FRAGMENT_LENGTH } from "./constants";
+import { containsSecret } from "./detectors";
 import type { Label } from "./types";
+import type { WorldSpec } from "./world-types";
 
 export interface Provenance {
   fragments: Map<string, Label[]>;
@@ -117,4 +119,22 @@ export function carriedLabels(
     }
   }
   return result;
+}
+
+export function seedProvenance(spec: WorldSpec): Provenance {
+  const provenance = createProvenance();
+  for (const file of Object.values(spec.files)) {
+    const labels = [...file.labels];
+    if (containsSecret(file.content) && labels.includes("PRIVATE") === false) {
+      labels.push("PRIVATE");
+    }
+    registerValue(provenance, file.content, labels);
+  }
+  for (const text of Object.values(spec.pages)) {
+    registerValue(provenance, text, ["UNTRUSTED"]);
+  }
+  for (const text of Object.values(spec.issues)) {
+    registerValue(provenance, text, ["UNTRUSTED"]);
+  }
+  return provenance;
 }

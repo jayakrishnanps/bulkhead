@@ -1,6 +1,6 @@
 import { matchGlob } from "./glob";
 import { normalizePath } from "./path";
-import type { JsonValue, Matcher } from "./types";
+import type { JsonValue, Label, MatchContext, Matcher } from "./types";
 import { getHostname, hostInDomains } from "./url";
 
 function toText(value: JsonValue): string {
@@ -27,6 +27,21 @@ function matchGlobList(
   const list = toList(patterns);
   for (const pattern of list) {
     if (matchGlob(pattern, normalized, ignoreCase)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function matchResolvedGlob(
+  patterns: string | string[],
+  text: string,
+  context: MatchContext,
+): boolean {
+  const resolved = context.resolvePath(text);
+  const list = toList(patterns);
+  for (const pattern of list) {
+    if (matchGlob(pattern, resolved, context.caseInsensitive)) {
       return true;
     }
   }
@@ -69,21 +84,54 @@ function matchDomainNotIn(domains: string[], text: string): boolean {
   return hostInDomains(hostname, domains) === false;
 }
 
+function matchCarries(
+  required: Label[],
+  text: string,
+  context: MatchContext,
+): boolean {
+  const labels = context.carriedLabels(text);
+  for (const label of required) {
+    if (labels.includes(label)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function matchValue(
   matcher: Matcher,
   value: JsonValue | undefined,
-  home: string,
+  context: MatchContext,
 ): boolean {
   if (value === undefined) {
+    return false;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (matchValue(matcher, item, context)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (value !== null && typeof value === "object") {
+    for (const child of Object.values(value)) {
+      if (matchValue(matcher, child, context)) {
+        return true;
+      }
+    }
     return false;
   }
   const text = toText(value);
 
   if (matcher.glob !== undefined) {
-    return matchGlobList(matcher.glob, text, home, false);
+    return matchGlobList(matcher.glob, text, context.home, false);
   }
   if (matcher.iglob !== undefined) {
-    return matchGlobList(matcher.iglob, text, home, true);
+    return matchGlobList(matcher.iglob, text, context.home, true);
+  }
+  if (matcher.resolved_glob !== undefined) {
+    return matchResolvedGlob(matcher.resolved_glob, text, context);
   }
   if (matcher.equals !== undefined) {
     return matchEquals(matcher.equals, text);
@@ -99,6 +147,9 @@ export function matchValue(
   }
   if (matcher.longer_than !== undefined) {
     return text.length > matcher.longer_than;
+  }
+  if (matcher.carries !== undefined) {
+    return matchCarries(matcher.carries, text, context);
   }
 
   return false;

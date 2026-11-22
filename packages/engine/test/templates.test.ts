@@ -50,6 +50,14 @@ describe("expandTemplate", () => {
     expect(expandTemplate("{{r0|shout}}", ["abc"])).toBe("abc");
   });
 
+  it("leaves text unchanged for toString transform", () => {
+    expect(expandTemplate("{{r0|toString}}", ["abc"])).toBe("abc");
+  });
+
+  it("leaves text unchanged for __proto__ transform", () => {
+    expect(expandTemplate("{{r0|__proto__}}", ["abc"])).toBe("abc");
+  });
+
   it("returns text unchanged when there are no placeholders", () => {
     expect(expandTemplate("no placeholders", [])).toBe("no placeholders");
   });
