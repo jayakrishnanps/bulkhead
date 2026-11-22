@@ -1,3 +1,6 @@
+import { createEffects } from "../src/effects";
+import { createVfs } from "../src/vfs";
+import type { VirtualState } from "../src/virtual-tools";
 import type { WorldSpec } from "../src/world-types";
 
 export const ROOT = "/home/dev";
@@ -28,5 +31,14 @@ export function makeSpec(overrides?: Partial<WorldSpec>): WorldSpec {
     safeDomains: ["example.test"],
     evilDomains: ["attacker.invalid"],
     ...overrides,
+  };
+}
+
+export function makeState(overrides?: Partial<WorldSpec>): VirtualState {
+  const spec = makeSpec(overrides);
+  return {
+    spec,
+    vfs: createVfs(spec, ROOT),
+    effects: createEffects(),
   };
 }
