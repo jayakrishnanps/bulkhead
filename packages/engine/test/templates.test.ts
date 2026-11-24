@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expandTemplate, expandValue } from "../src/templates";
+import { expandArgs, expandTemplate, expandValue } from "../src/templates";
 
 describe("expandTemplate", () => {
   it("replaces a single placeholder with the matching result", () => {
@@ -68,5 +68,14 @@ describe("expandValue", () => {
     const input = { url: "x{{r0}}", paths: ["{{r0}}", "p"], n: 1 };
     const expected = { url: "xz", paths: ["z", "p"], n: 1 };
     expect(expandValue(input, ["z"])).toEqual(expected);
+  });
+});
+
+describe("expandArgs", () => {
+  it("expands placeholders in record values with results", () => {
+    const input = { a: "{{r0}}", b: ["x{{r1}}"], c: 5 };
+    const results = ["p", "q"];
+    const expected = { a: "p", b: ["xq"], c: 5 };
+    expect(expandArgs(input, results)).toEqual(expected);
   });
 });

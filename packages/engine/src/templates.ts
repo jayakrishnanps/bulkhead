@@ -111,3 +111,14 @@ export function expandValue(value: JsonValue, results: string[]): JsonValue {
   }
   return value;
 }
+
+export function expandArgs(
+  args: Record<string, JsonValue>,
+  results: string[],
+): Record<string, JsonValue> {
+  const result: Record<string, JsonValue> = {};
+  for (const [key, value] of Object.entries(args)) {
+    result[key] = expandValue(value, results);
+  }
+  return result;
+}

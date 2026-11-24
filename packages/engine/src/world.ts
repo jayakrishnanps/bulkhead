@@ -91,6 +91,7 @@ export function createVirtualWorld(options: {
     },
 
     changedTools(): string[] {
+      applyDrift(options.drift, state);
       return [...state.changed];
     },
 
