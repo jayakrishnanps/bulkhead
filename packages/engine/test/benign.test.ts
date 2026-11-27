@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runBenign } from "../src/benign";
+import { runBenign, runBenignDetailed } from "../src/benign";
 import { parsePolicy } from "../src/policy";
 import type { Policy } from "../src/types";
 import { createVirtualWorld } from "../src/world";
@@ -178,5 +178,45 @@ describe("runBenign", () => {
     await runBenign({ level, policy, world });
     const eff = await world.effects();
     expect(eff.requests.length).toBe(0);
+  });
+
+  it("collects ruleHits and matches runBenign results in runBenignDetailed", async () => {
+    const policy = parse(
+      [
+        "default: allow",
+        "rules:",
+        "  - name: no-send",
+        "    do: deny",
+        "    when:",
+        "      tool_tag: sends_out",
+      ].join("\n"),
+    );
+    const worldA = createVirtualWorld({
+      spec: makeSpec(),
+      root: ROOT,
+      drift: null,
+    });
+    const worldB = createVirtualWorld({
+      spec: makeSpec(),
+      root: ROOT,
+      drift: null,
+    });
+    const level = makeLevel();
+    const detailed = await runBenignDetailed({ level, policy, world: worldA });
+    const basic = await runBenign({ level, policy, world: worldB });
+    expect(detailed.ruleHits).toEqual(["no-send"]);
+    expect(detailed.results).toEqual(basic);
+  });
+
+  it("returns empty ruleHits when no rules match in runBenignDetailed", async () => {
+    const policy = parse("default: allow");
+    const world = createVirtualWorld({
+      spec: makeSpec(),
+      root: ROOT,
+      drift: null,
+    });
+    const level = makeLevel();
+    const detailed = await runBenignDetailed({ level, policy, world });
+    expect(detailed.ruleHits).toEqual([]);
   });
 });

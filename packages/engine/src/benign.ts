@@ -5,6 +5,11 @@ import type { RunResult } from "./run-steps";
 import type { Policy } from "./types";
 import type { WorldPort } from "./world-types";
 
+export type BenignRun = {
+  results: BenignResult[];
+  ruleHits: string[];
+};
+
 function evaluateTaskRun(
   task: BenignTask,
   run: RunResult,
@@ -30,12 +35,29 @@ function evaluateTaskRun(
   };
 }
 
-export async function runBenign(options: {
+function collectRuleHits(
+  run: RunResult,
+  seen: Set<string>,
+  ruleHits: string[],
+): void {
+  for (const event of run.events) {
+    for (const name of event.ruleNames) {
+      if (seen.has(name) === false) {
+        seen.add(name);
+        ruleHits.push(name);
+      }
+    }
+  }
+}
+
+export async function runBenignDetailed(options: {
   level: Level;
   policy: Policy;
   world: WorldPort;
-}): Promise<BenignResult[]> {
+}): Promise<BenignRun> {
   const results: BenignResult[] = [];
+  const seen = new Set<string>();
+  const ruleHits: string[] = [];
   for (const task of options.level.benign) {
     await options.world.reset();
     const provenance = createProvenance();
@@ -49,7 +71,17 @@ export async function runBenign(options: {
       },
       task.steps,
     );
+    collectRuleHits(run, seen, ruleHits);
     results.push(evaluateTaskRun(task, run, options.level.maxAsksPerTask));
   }
-  return results;
+  return { results, ruleHits };
+}
+
+export async function runBenign(options: {
+  level: Level;
+  policy: Policy;
+  world: WorldPort;
+}): Promise<BenignResult[]> {
+  const detailed = await runBenignDetailed(options);
+  return detailed.results;
 }

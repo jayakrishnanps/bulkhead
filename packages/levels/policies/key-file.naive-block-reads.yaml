@@ -1,0 +1,6 @@
+default: allow
+rules:
+  - name: block-reads
+    do: deny
+    when:
+      tool: read_file

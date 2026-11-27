@@ -1,0 +1,7 @@
+default: allow
+rules:
+  - name: naive-ssh-text
+    do: deny
+    when:
+      any_arg:
+        contains: .ssh

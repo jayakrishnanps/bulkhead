@@ -64,6 +64,7 @@ export const MAX_SYMLINK_HOPS = 16;
 export const CHUNK_SIZE = 24;
 export const MAX_PLANS = 6000;
 export const FATIGUE_AFTER_ASKS = 3;
+export const MAX_AVERAGE_ASKS = 3;
 export const DEFAULT_MAX_ASKS_PER_TASK = 1;
 export const RESISTANCE_POINTS = 60;
 export const UTILITY_POINTS = 30;

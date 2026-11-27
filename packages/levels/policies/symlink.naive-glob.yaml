@@ -1,0 +1,7 @@
+default: allow
+rules:
+  - name: naive-glob
+    do: deny
+    when:
+      any_arg:
+        iglob: "**/.ssh/**"

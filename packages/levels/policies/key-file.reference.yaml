@@ -1,0 +1,8 @@
+default: allow
+rules:
+  - name: no-private-keys
+    do: deny
+    say: Private keys must never be read.
+    when:
+      any_arg:
+        resolved_glob: "**/.ssh/**"
